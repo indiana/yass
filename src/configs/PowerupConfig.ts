@@ -11,7 +11,7 @@ import {
 
 export interface PowerupConfig {
   type: string;
-  spriteStrategy: IPowerupSprite;
+  sprite: IPowerupSprite;
   effectStrategy: IPowerupEffectStrategy;
 }
 
