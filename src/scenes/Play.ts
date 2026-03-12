@@ -51,6 +51,15 @@ export class Play extends Phaser.Scene {
     create() {
         const { width, height } = this.cameras.main;
 
+        // Reset game state
+        this.score = 0;
+        this.enemiesSpawned = 0;
+        this.weaponMode = 0;
+        this.shotsFired = 0;
+        this.powerupShots = 0;
+        this.lastBulletShotAt = 0;
+        this.lastEnemyBulletShotAt = 0;
+
         // Background
         this.background = new Background(this);
 
@@ -120,6 +129,24 @@ export class Play extends Phaser.Scene {
     update(time: number) {
         this.player.setY(500);
         this.background.update();
+
+        // Manual updates for pooled objects
+        this.playerBulletPool.getChildren().forEach((gameObject) => {
+            const bullet = gameObject as Bullet;
+            if (bullet.active) bullet.update();
+        });
+        this.enemyBulletPool.getChildren().forEach((gameObject) => {
+            const bullet = gameObject as Bullet;
+            if (bullet.active) bullet.update();
+        });
+        this.enemyPool.getChildren().forEach((gameObject) => {
+            const enemy = gameObject as Enemy;
+            if (enemy.active) enemy.update();
+        });
+        this.powerupPool.getChildren().forEach((gameObject) => {
+            const powerup = gameObject as Powerup;
+            if (powerup.active) powerup.update();
+        });
 
         // Input handling
         if (Phaser.Input.Keyboard.JustDown(this.sKey)) {
@@ -217,7 +244,7 @@ export class Play extends Phaser.Scene {
         this.lastEnemyBulletShotAt = time;
         const bullet = this.enemyBulletPool.get() as Bullet;
         if (bullet) {
-            const velocityY = Math.min(200 + Math.floor(this.enemiesSpawned / 50) * 50, 700);
+            const velocityY = Math.min(400 + Math.floor(this.enemiesSpawned / 50) * 50, 800);
             bullet.fire(enemy.x, enemy.y + 32, 0, velocityY);
             
             const damageMap: { [key: string]: number } = { 'enemy1': 4, 'enemy2': 5, 'enemy4': 2 };
