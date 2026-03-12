@@ -1,32 +1,26 @@
 import Phaser from 'phaser';
-
 export class Preload extends Phaser.Scene {
     constructor() {
         super('Preload');
     }
-
     preload() {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
-
         const splash = this.add.image(width / 2, 150, 'splash').setOrigin(0.5);
         const progressBar = this.add.graphics();
         const progressBox = this.add.graphics();
         progressBox.fillStyle(0x222222, 0.8);
         progressBox.fillRect(width / 2 - 160, height / 2 - 25, 320, 50);
-
-        this.load.on('progress', (value: number) => {
+        this.load.on('progress', (value) => {
             progressBar.clear();
             progressBar.fillStyle(0xffffff, 1);
             progressBar.fillRect(width / 2 - 150, height / 2 - 15, 300 * value, 30);
         });
-
         this.load.on('complete', () => {
             progressBar.destroy();
             progressBox.destroy();
             this.scene.start('Menu');
         });
-
         // Assets from legacy/game/states/preload.js
         this.load.spritesheet('player', 'starship3.png', { frameWidth: 51, frameHeight: 51 });
         this.load.spritesheet('player_explode', 'player_explode.png', { frameWidth: 51, frameHeight: 51 });
@@ -45,16 +39,12 @@ export class Preload extends Phaser.Scene {
         this.load.image('background', 'background.jpg');
         this.load.image('soundOn', 'sound_on.png');
         this.load.image('soundOff', 'sound_off.png');
-
         this.load.bitmapFont('modern_led', 'Modern LED Board 7/font.png', 'Modern LED Board 7/font.fnt');
-
         this.load.audio('player_shot', 'player_shot.wav');
         this.load.audio('enemy_shot', 'enemy_shot.wav');
         this.load.audio('enemy_explode', 'enemy_explode.wav');
         this.load.audio('powerup', 'powerup.wav');
-
         this.load.spritesheet('explosion', 'explosion3.png', { frameWidth: 64, frameHeight: 64 });
-
         this.load.on('complete', () => {
             this.createAnimations();
             progressBar.destroy();
@@ -62,8 +52,7 @@ export class Preload extends Phaser.Scene {
             this.scene.start('Menu');
         });
     }
-
-    private createAnimations() {
+    createAnimations() {
         // Player animation
         this.anims.create({
             key: 'player_flame',
@@ -71,7 +60,6 @@ export class Preload extends Phaser.Scene {
             frameRate: 12,
             repeat: -1
         });
-
         // Explosion animation
         this.anims.create({
             key: 'explode',
@@ -79,7 +67,6 @@ export class Preload extends Phaser.Scene {
             frameRate: 20,
             hideOnComplete: true
         });
-
         // Enemy animations
         ['1', '2', '3', '4'].forEach(num => {
             this.anims.create({
@@ -91,3 +78,4 @@ export class Preload extends Phaser.Scene {
         });
     }
 }
+//# sourceMappingURL=Preload.js.map
