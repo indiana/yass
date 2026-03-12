@@ -7,12 +7,12 @@ import { Player } from "../prefabs/Player";
 import { GameRegistry, WeaponMode } from "../utils/GameRegistry";
 import { SpawningConfiguration } from "../configs/SpawningConfig";
 import { EnemyTypes, DEFAULT_ENEMY_TYPE } from "../configs/EnemyConfig";
-import { PowerupTypes, DEFAULT_POWERUP_TYPE } from "../configs/PowerupConfig";
+import { PowerupTypes, DEFAULT_POWERUP_TYPE, getRandomPowerupType } from '../configs/PowerupConfig';
 
 export class Play extends Phaser.Scene {
-  private SHOT_DELAY = 100;
-  private NUMBER_OF_EXPLOSIONS = 20;
-  private WEAPON_POWERUP_LIMIT = 500;
+    private SHOT_DELAY = 100;
+    private NUMBER_OF_EXPLOSIONS = 20;
+    private WEAPON_POWERUP_LIMIT = 500;
 
   public player!: Player; // Public for strategies
   private background!: Background;
@@ -236,8 +236,7 @@ export class Play extends Phaser.Scene {
     const powerup = this.powerupPool.get() as Powerup;
     if (!powerup) return;
 
-    const rand = Phaser.Math.Between(0, 1);
-    const typeKey = rand === 0 ? "weapon" : "health"; // 50/50 chance
+    const typeKey = getRandomPowerupType();
     const config = PowerupTypes[typeKey] || PowerupTypes[DEFAULT_POWERUP_TYPE];
 
     powerup.spawn(config, x, y);
