@@ -7,9 +7,12 @@ import { Player } from '../prefabs/Player';
 import { GameRegistry, WeaponMode } from '../utils/GameRegistry';
 import { SpawningConfiguration } from '../configs/SpawningConfig';
 import { EnemyTypes, DEFAULT_ENEMY_TYPE } from '../configs/EnemyConfig';
+import { PowerupTypes, DEFAULT_POWERUP_TYPE } from '../configs/PowerupConfig';
 
 export class Play extends Phaser.Scene {
     private SHOT_DELAY = 100;
+    private NUMBER_OF_EXPLOSIONS = 20;
+    private WEAPON_POWERUP_LIMIT = 500;
     private NUMBER_OF_EXPLOSIONS = 20;
     private WEAPON_POWERUP_LIMIT = 500;
 
@@ -172,23 +175,17 @@ export class Play extends Phaser.Scene {
     private genPowerup(x: number, y: number) {
         const powerup = this.powerupPool.get() as Powerup;
         if (!powerup) return;
-        const isWeapon = Phaser.Math.Between(0, 1) === 0;
-        const currentMode = this.registryHelper.weaponMode;
-        const texture = isWeapon ? (currentMode === WeaponMode.SINGLE ? 'powerup_weapon2' : 'powerup_weapon3') : 'powerup_hp';
-        powerup.spawn(x, y, texture);
+        
+        const rand = Phaser.Math.Between(0, 1);
+        const typeKey = rand === 0 ? 'weapon' : 'health'; // 50/50 chance
+        const config = PowerupTypes[typeKey] || PowerupTypes[DEFAULT_POWERUP_TYPE];
+
+        powerup.spawn(config, x, y);
     }
 
     private collectPowerup(player: Player, powerup: Powerup) {
-        const key = powerup.texture.key;
+        powerup.applyEffect(this);
         powerup.disableBody(true, true);
-        if (key.includes('weapon')) {
-            if (this.registryHelper.powerupShots < this.registryHelper.shotsFired) this.registryHelper.powerupShots = this.registryHelper.shotsFired;
-            if (this.registryHelper.weaponMode < WeaponMode.TRIPLE) this.registryHelper.weaponMode++;
-            this.registryHelper.powerupShots += this.WEAPON_POWERUP_LIMIT;
-            if (this.registryHelper.playSound) this.sound.play('powerup');
-        } else if (key === 'powerup_hp') {
-            this.registryHelper.health = Math.min(10, this.registryHelper.health + 5);
-        }
     }
 
     private pauseGame() {
