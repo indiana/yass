@@ -1,8 +1,6 @@
-# YASS - Yet Another Space Shooter
+# ![YASS Logo](public/starship2.png) YASS - Yet Another Space Shooter
 
 A classic vertical-scrolling shoot-'em-up game built with modern web technologies. Blast your way through endless waves of enemies, collect power-ups, and aim for the high score!
-
-![YASS Logo](public/starship2.png)
 
 ## Gameplay
 
