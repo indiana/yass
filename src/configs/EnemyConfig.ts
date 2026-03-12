@@ -18,6 +18,7 @@ export interface EnemyConfig {
     bullet?: {
         damage: number;
     };
+    powerupChance?: number;
 }
 
 export const EnemyTypes: Record<string, EnemyConfig> = {
@@ -31,7 +32,8 @@ export const EnemyTypes: Record<string, EnemyConfig> = {
         yVelocityMultiplier: 1,
         movement: new PlayerTrackingMovement(),
         shooting: new ProbabilisticShooting(),
-        bullet: { damage: 4 }
+        bullet: { damage: 4 },
+        powerupChance: 4
     },
     heavyGrunt: {
         type: 'heavyGrunt',
@@ -43,7 +45,8 @@ export const EnemyTypes: Record<string, EnemyConfig> = {
         yVelocityMultiplier: 1,
         movement: new PlayerTrackingMovement(),
         shooting: new ProbabilisticShooting(),
-        bullet: { damage: 5 }
+        bullet: { damage: 5 },
+        powerupChance: 4
     },
     kamikaze: {
         type: 'kamikaze',
@@ -54,7 +57,8 @@ export const EnemyTypes: Record<string, EnemyConfig> = {
         baseYVelocity: 250, // Original was 150 + 100 for enemy3
         yVelocityMultiplier: 2, // 2x faster as requested
         movement: new StaticXMovement(),
-        shooting: new NoShooting()
+        shooting: new NoShooting(),
+        powerupChance: 4
     },
     scout: {
         type: 'scout',
@@ -66,6 +70,7 @@ export const EnemyTypes: Record<string, EnemyConfig> = {
         yVelocityMultiplier: 1,
         movement: new SineWaveMovement(),
         shooting: new ProbabilisticShooting(),
-        bullet: { damage: 2 }
+        bullet: { damage: 2 },
+        powerupChance: 4
     }
 };

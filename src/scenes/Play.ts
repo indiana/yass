@@ -7,7 +7,7 @@ import { Player } from "../prefabs/Player";
 import { GameRegistry, WeaponMode } from "../utils/GameRegistry";
 import { SpawningConfiguration } from "../configs/SpawningConfig";
 import { EnemyTypes, DEFAULT_ENEMY_TYPE } from "../configs/EnemyConfig";
-import { PowerupTypes, DEFAULT_POWERUP_TYPE, getRandomPowerupType } from '../configs/PowerupConfig';
+import { PowerupSpawner } from "../managers/PowerupSpawner";
 
 export class Play extends Phaser.Scene {
     private SHOT_DELAY = 100;
@@ -19,7 +19,7 @@ export class Play extends Phaser.Scene {
   private playerBulletPool!: Phaser.Physics.Arcade.Group;
   private enemyBulletPool!: Phaser.Physics.Arcade.Group;
   private enemyPool!: Phaser.Physics.Arcade.Group;
-  private powerupPool!: Phaser.Physics.Arcade.Group;
+  public powerupPool!: Phaser.Physics.Arcade.Group;
   private explosionPool!: Phaser.GameObjects.Group;
 
   public registryHelper!: GameRegistry; // Public for strategies
@@ -28,6 +28,7 @@ export class Play extends Phaser.Scene {
   private pKey!: Phaser.Input.Keyboard.Key;
 
   private currentSpawnStage = SpawningConfiguration[0];
+  private powerupSpawner!: PowerupSpawner;
 
   constructor() {
     super("Play");
@@ -62,6 +63,8 @@ export class Play extends Phaser.Scene {
     });
 
     this.player = new Player(this, width / 2, 550, this.playerBulletPool);
+
+    this.powerupSpawner = new PowerupSpawner(this);
 
     this.scene.launch("UIScene");
 
@@ -153,7 +156,7 @@ export class Play extends Phaser.Scene {
     enemy.disableBody(true, true);
     this.explode(enemy);
     this.registryHelper.score += enemy.config.score;
-    if (Phaser.Math.Between(1, 100) <= 4) this.genPowerup(enemy.x, enemy.y);
+    this.powerupSpawner.trySpawnPowerup(enemy.x, enemy.y, enemy.config.powerupChance || 0);
   }
 
   private playerHit(player: Player, bullet: Bullet) {
@@ -232,15 +235,7 @@ export class Play extends Phaser.Scene {
     }
   }
 
-  private genPowerup(x: number, y: number) {
-    const powerup = this.powerupPool.get() as Powerup;
-    if (!powerup) return;
 
-    const typeKey = getRandomPowerupType();
-    const config = PowerupTypes[typeKey] || PowerupTypes[DEFAULT_POWERUP_TYPE];
-
-    powerup.spawn(config, x, y);
-  }
 
   private collectPowerup(player: Player, powerup: Powerup) {
     powerup.applyEffect(this);
