@@ -9,7 +9,7 @@ export class Preload extends Phaser.Scene {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
-        const splash = this.add.image(width / 2, 150, 'splash').setOrigin(0.5);
+
         const progressBar = this.add.graphics();
         const progressBox = this.add.graphics();
         progressBox.fillStyle(0x222222, 0.8);

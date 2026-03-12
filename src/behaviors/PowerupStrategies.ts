@@ -2,12 +2,12 @@ import { IPowerupSprite, IPowerupEffectStrategy } from "./IPowerupBehavior";
 import { Play } from "../scenes/Play";
 import { Powerup } from "../prefabs/Powerup";
 import { WeaponMode } from "../utils/GameRegistry";
-import Phaser from "phaser";
+
 
 // --- Sprite Strategies ---
 
 export class HpSprite implements IPowerupSprite {
-  getTexture(scene: Play): string {
+  getTexture(_scene: Play): string {
     return "powerup_hp";
   }
 }
@@ -25,7 +25,7 @@ export class WeaponSprite implements IPowerupSprite {
 // --- Effect Strategies ---
 
 export class HpEffectStrategy implements IPowerupEffectStrategy {
-  apply(powerup: Powerup, scene: Play): void {
+  apply(_powerup: Powerup, scene: Play): void {
     const playerHealth = scene.registryHelper.health;
     scene.registryHelper.health = Math.min(10, playerHealth + 5);
   }
@@ -34,7 +34,7 @@ export class HpEffectStrategy implements IPowerupEffectStrategy {
 export class WeaponEffectStrategy implements IPowerupEffectStrategy {
   private WEAPON_POWERUP_LIMIT = 500; // Define as a constant if used elsewhere
 
-  apply(powerup: Powerup, scene: Play): void {
+  apply(_powerup: Powerup, scene: Play): void {
     const registry = scene.registryHelper;
 
     if (registry.powerupShots < registry.shotsFired) {

@@ -100,7 +100,7 @@ export class Play extends Phaser.Scene {
     this.spawnEnemy();
   }
 
-  update(time: number) {
+  update(_time: number) {
     if (Phaser.Input.Keyboard.JustDown(this.sKey))
       this.registryHelper.playSound = !this.registryHelper.playSound;
     if (Phaser.Input.Keyboard.JustDown(this.pKey)) this.pauseGame();

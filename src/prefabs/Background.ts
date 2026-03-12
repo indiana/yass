@@ -17,7 +17,7 @@ export class Background extends Phaser.GameObjects.Container {
         scene.add.existing(this);
     }
 
-    preUpdate(time: number, delta: number) {
+    preUpdate(_time: number, _delta: number) {
         // TileSprites don't have a preUpdate that moves tiles, so we do it here
         this.bg100.tilePositionY -= 1;
         this.bg80.tilePositionY -= 2;

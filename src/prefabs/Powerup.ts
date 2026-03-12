@@ -23,9 +23,11 @@ export class Powerup extends Phaser.Physics.Arcade.Sprite {
     this.setVelocityY(150);
   }
 
+  /* eslint-disable prefer-spread */
   public applyEffect(scene: Play) {
     this.effectStrategy.apply(this, scene);
   }
+  /* eslint-enable prefer-spread */
 
   preUpdate(time: number, delta: number) {
     super.preUpdate(time, delta);

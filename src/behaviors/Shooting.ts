@@ -5,7 +5,7 @@ import Phaser from 'phaser';
 
 // A strategy for enemies that do not shoot.
 export class NoShooting implements IShootingStrategy {
-    update(enemy: Enemy, scene: Play, time: number): void {
+    update(_enemy: Enemy, _scene: Play, _time: number): void {
         // This enemy does not fire.
     }
 }
