@@ -50,7 +50,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         return false;
     }
 
-    update() {
+    preUpdate(time: number, delta: number) {
+        super.preUpdate(time, delta);
         if (this.texture.key === 'enemy4' && this.active) {
             this.setVelocityX(200 * Math.sin(this.y * Math.PI / 300));
         }

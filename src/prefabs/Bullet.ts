@@ -14,7 +14,8 @@ export class Bullet extends Phaser.Physics.Arcade.Sprite {
         this.setVelocity(velocityX, velocityY);
     }
 
-    update() {
+    preUpdate(time: number, delta: number) {
+        super.preUpdate(time, delta);
         if (this.y < -50 || this.y > 650 || this.x < -50 || this.x > 850) {
             this.disableBody(true, true);
         }

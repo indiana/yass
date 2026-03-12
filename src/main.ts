@@ -5,6 +5,7 @@ import { Menu } from './scenes/Menu';
 import { Play } from './scenes/Play';
 import { GameOver } from './scenes/GameOver';
 import { PauseScene } from './scenes/PauseScene';
+import { UIScene } from './scenes/UIScene';
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -18,7 +19,7 @@ const config: Phaser.Types.Core.GameConfig = {
             debug: false
         }
     },
-    scene: [Boot, Preload, Menu, Play, GameOver, PauseScene]
+    scene: [Boot, Preload, Menu, Play, GameOver, PauseScene, UIScene]
 };
 
 new Phaser.Game(config);

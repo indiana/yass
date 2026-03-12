@@ -14,7 +14,8 @@ export class Powerup extends Phaser.Physics.Arcade.Sprite {
         this.setVelocityY(150);
     }
 
-    update() {
+    preUpdate(time: number, delta: number) {
+        super.preUpdate(time, delta);
         if (this.y > 650) {
             this.disableBody(true, true);
         }
