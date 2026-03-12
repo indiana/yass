@@ -1,7 +1,4 @@
-import {
-  IPowerupSpriteStrategy,
-  IPowerupEffectStrategy,
-} from "./IPowerupBehavior";
+import { IPowerupSprite, IPowerupEffectStrategy } from "./IPowerupBehavior";
 import { Play } from "../scenes/Play";
 import { Powerup } from "../prefabs/Powerup";
 import { WeaponMode } from "../utils/GameRegistry";
