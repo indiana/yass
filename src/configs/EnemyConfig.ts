@@ -3,6 +3,8 @@ import { StaticXMovement, SineWaveMovement, PlayerTrackingMovement } from '../be
 import { NoShooting, ProbabilisticShooting } from '../behaviors/Shooting';
 import Phaser from 'phaser';
 
+export const DEFAULT_ENEMY_TYPE = 'grunt';
+
 export interface EnemyConfig {
     type: string;
     sprite: string;

@@ -5,7 +5,8 @@ import { Enemy } from '../prefabs/Enemy';
 import { Powerup } from '../prefabs/Powerup';
 import { Player } from '../prefabs/Player';
 import { GameRegistry, WeaponMode } from '../utils/GameRegistry';
-import { EnemyTypes } from '../configs/EnemyConfig';
+import { SpawningConfiguration } from '../configs/SpawningConfig';
+import { EnemyTypes, DEFAULT_ENEMY_TYPE } from '../configs/EnemyConfig';
 
 export class Play extends Phaser.Scene {
     private SHOT_DELAY = 100;
@@ -25,7 +26,7 @@ export class Play extends Phaser.Scene {
     private sKey!: Phaser.Input.Keyboard.Key;
     private pKey!: Phaser.Input.Keyboard.Key;
 
-    private enemyTypes = Object.values(EnemyTypes);
+    private currentSpawnStage = SpawningConfiguration[0];
 
     constructor() {
         super('Play');
@@ -122,19 +123,38 @@ export class Play extends Phaser.Scene {
         this.time.delayedCall(1000, () => this.scene.start('GameOver'));
     }
 
+    private selectEnemyType(): string {
+        // Find the correct spawn stage based on the number of enemies spawned
+        const enemiesSpawned = this.registryHelper.enemiesSpawned;
+        for (let i = SpawningConfiguration.length - 1; i >= 0; i--) {
+            const stage = SpawningConfiguration[i];
+            if (enemiesSpawned >= stage.minEnemiesSpawned) {
+                this.currentSpawnStage = stage;
+                break;
+            }
+        }
+        
+        // Calculate the total weight of the current spawn pool
+        const totalWeight = this.currentSpawnStage.spawnPool.reduce((sum, enemy) => sum + enemy.weight, 0);
+        if (totalWeight === 0) return DEFAULT_ENEMY_TYPE; // Failsafe
+
+        // Pick a random number and find the corresponding enemy type
+        let randomWeight = Phaser.Math.FloatBetween(0, totalWeight);
+        for (const spawnable of this.currentSpawnStage.spawnPool) {
+            randomWeight -= spawnable.weight;
+            if (randomWeight <= 0) {
+                return spawnable.type;
+            }
+        }
+        
+        return DEFAULT_ENEMY_TYPE; // Failsafe in case of floating point issues
+    }
+
     private spawnEnemy() {
         const enemy = this.enemyPool.get() as Enemy;
         if (!enemy) return;
 
-        // Choose a random enemy type based on game progress
-        const levelBonus = Math.min(Math.floor(this.registryHelper.enemiesSpawned / 100), 5);
-        const rand = Phaser.Math.Between(1, 10);
-        let typeKey: string;
-
-        if (rand <= 1 + levelBonus) typeKey = 'heavyGrunt';
-        else if (rand <= 2 + levelBonus) typeKey = 'kamikaze';
-        else if (rand <= 5) typeKey = 'scout';
-        else typeKey = 'grunt';
+        const typeKey = this.selectEnemyType();
         
         enemy.spawn(EnemyTypes[typeKey]);
         this.registryHelper.enemiesSpawned++;
