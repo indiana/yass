@@ -1,61 +1,55 @@
 import Phaser from 'phaser';
+import { IMovementStrategy, IShootingStrategy } from '../behaviors/IBehavior';
+import { EnemyConfig } from '../configs/EnemyConfig';
+import { Play } from '../scenes/Play';
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
-    constructor(scene: Phaser.Scene, x: number, y: number, texture: string, frame?: string | number) {
-        super(scene, x, y, texture || 'enemy1', frame);
+    private movementStrategy!: IMovementStrategy;
+    private shootingStrategy!: IShootingStrategy;
+    public config!: EnemyConfig;
+
+    constructor(scene: Phaser.Scene) {
+        // A default texture is required, but it will be overridden by spawn.
+        super(scene, 0, 0, 'enemy1');
         scene.add.existing(this);
-        
         this.setOrigin(0.5, 0.5);
     }
 
-    spawn(hp: number, texture: string) {
-        this.setTexture(texture);
-        
-        let startX: number;
-        if (texture === 'enemy4') {
-            startX = Phaser.Math.Between(24, 576);
-        } else {
-            startX = Phaser.Math.Between(24, 776);
-        }
+    public spawn(config: EnemyConfig) {
+        this.config = config;
+        this.movementStrategy = config.movement;
+        this.shootingStrategy = config.shooting;
 
+        this.setTexture(config.sprite);
+        
+        const startX = Phaser.Math.Between(24, 776);
         this.enableBody(true, startX, -50, true, true);
         if (this.body) this.body.immovable = true;
-        this.setData('health', hp);
+        this.setData('health', config.hp);
 
-        let velocityY = 150 + Phaser.Math.Between(1, 100);
-        if (texture === 'enemy3') {
-            velocityY += 100;
-        }
-        this.setVelocityY(velocityY);
-
-        let velocityX = 0;
-        if (texture === 'enemy2') {
-            velocityX = -50 + Phaser.Math.Between(0, 100);
-        } else if (texture !== 'enemy4') {
-            velocityX = -5 + Phaser.Math.Between(0, 10);
-        }
-        this.setVelocityX(velocityX);
-
-        // Animations
-        const animKey = 'flame' + texture.replace('enemy', '');
+        const finalYVelocity = (config.baseYVelocity + Phaser.Math.Between(1, 100)) * config.yVelocityMultiplier;
+        this.setVelocity(config.initialXVelocity(), finalYVelocity);
+        
+        const animKey = 'flame' + config.sprite.replace('enemy', '');
         this.play(animKey);
     }
 
-    damage(amount: number) {
-        let hp = this.getData('health') - amount;
-        this.setData('health', hp);
-        if (hp <= 0) {
-            return true; // killed
-        }
-        return false;
+    public damage(amount: number): boolean {
+        const newHealth = this.getData('health') - amount;
+        this.setData('health', newHealth);
+        return newHealth <= 0;
     }
 
     preUpdate(time: number, delta: number) {
         super.preUpdate(time, delta);
-        if (this.texture.key === 'enemy4' && this.active) {
-            this.setVelocityX(200 * Math.sin(this.y * Math.PI / 300));
-        }
+        
+        if (!this.active) return;
+        
+        // Let strategies handle behavior
+        this.movementStrategy.update(this, this.scene as Play);
+        this.shootingStrategy.update(this, this.scene as Play, time);
 
+        // Self-destruct if off-screen
         if (this.y > 650) {
             this.disableBody(true, true);
         }

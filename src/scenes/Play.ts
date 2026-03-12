@@ -5,13 +5,14 @@ import { Enemy } from '../prefabs/Enemy';
 import { Powerup } from '../prefabs/Powerup';
 import { Player } from '../prefabs/Player';
 import { GameRegistry, WeaponMode } from '../utils/GameRegistry';
+import { EnemyTypes } from '../configs/EnemyConfig';
 
 export class Play extends Phaser.Scene {
     private SHOT_DELAY = 100;
     private NUMBER_OF_EXPLOSIONS = 20;
     private WEAPON_POWERUP_LIMIT = 500;
 
-    private player!: Player;
+    public player!: Player; // Public for strategies
     private background!: Background;
     private playerBulletPool!: Phaser.Physics.Arcade.Group;
     private enemyBulletPool!: Phaser.Physics.Arcade.Group;
@@ -19,77 +20,48 @@ export class Play extends Phaser.Scene {
     private powerupPool!: Phaser.Physics.Arcade.Group;
     private explosionPool!: Phaser.GameObjects.Group;
 
-    private registryHelper!: GameRegistry;
+    public registryHelper!: GameRegistry; // Public for strategies
     private lastEnemyBulletShotAt = 0;
     private sKey!: Phaser.Input.Keyboard.Key;
     private pKey!: Phaser.Input.Keyboard.Key;
+
+    private enemyTypes = Object.values(EnemyTypes);
 
     constructor() {
         super('Play');
     }
 
     create() {
-        const { width, height } = this.cameras.main;
+        const { width } = this.cameras.main;
         this.registryHelper = new GameRegistry(this);
         this.registryHelper.reset();
 
-        // Background
         this.background = new Background(this);
 
-        // Pools (Order matters for collision)
         this.playerBulletPool = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
         this.enemyBulletPool = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
         this.enemyPool = this.physics.add.group({ classType: Enemy, runChildUpdate: true });
         this.powerupPool = this.physics.add.group({ classType: Powerup, runChildUpdate: true });
-        
-        this.explosionPool = this.add.group({
-            defaultKey: 'explosion',
-            maxSize: this.NUMBER_OF_EXPLOSIONS
-        });
+        this.explosionPool = this.add.group({ defaultKey: 'explosion', maxSize: this.NUMBER_OF_EXPLOSIONS });
 
-        // Player
         this.player = new Player(this, width / 2, 550, this.playerBulletPool);
         
-        // UI Scene
         this.scene.launch('UIScene');
 
-        // Input
         this.sKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S);
         this.pKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.P);
 
-        // Collisions
-        this.physics.add.overlap(this.playerBulletPool, this.enemyPool, this.enemyHit as any, undefined, this);
-        this.physics.add.overlap(this.enemyBulletPool, this.player, this.playerHit as any, undefined, this);
-        this.physics.add.overlap(this.enemyPool, this.player, this.playerRammed as any, undefined, this);
-        this.physics.add.overlap(this.powerupPool, this.player, this.collectPowerup as any, undefined, this);
+        this.physics.add.overlap(this.playerBulletPool, this.enemyPool, this.enemyHit, undefined, this);
+        this.physics.add.overlap(this.enemyBulletPool, this.player, this.playerHit, undefined, this);
+        this.physics.add.overlap(this.enemyPool, this.player, this.playerRammed, undefined, this);
+        this.physics.add.overlap(this.powerupPool, this.player, this.collectPowerup, undefined, this);
 
         this.spawnEnemy();
     }
 
     update(time: number) {
-        // Input handling for game state
-        if (Phaser.Input.Keyboard.JustDown(this.sKey)) {
-            this.registryHelper.playSound = !this.registryHelper.playSound;
-        }
-
-        if (Phaser.Input.Keyboard.JustDown(this.pKey)) {
-            this.pauseGame();
-        }
-
-        // Enemy shooting logic
-        this.enemyPool.getChildren().forEach((gameObject: Phaser.GameObjects.GameObject) => {
-            const enemy = gameObject as Enemy;
-            if (enemy.active) {
-                if (Phaser.Math.Between(1, 500 - Math.min(this.registryHelper.score, 400)) <= 10) {
-                    this.enemyShoot(enemy, time);
-                }
-                
-                if (this.registryHelper.enemiesSpawned > 50 && Phaser.Math.Between(1, 1000) === 1) {
-                    const velocityX = this.player.x > enemy.x ? Phaser.Math.Between(0, 200) : -Phaser.Math.Between(0, 200);
-                    enemy.setVelocityX(velocityX);
-                }
-            }
-        });
+        if (Phaser.Input.Keyboard.JustDown(this.sKey)) this.registryHelper.playSound = !this.registryHelper.playSound;
+        if (Phaser.Input.Keyboard.JustDown(this.pKey)) this.pauseGame();
 
         // Spawn logic
         if (Phaser.Math.Between(1, 500 - Math.min(this.registryHelper.enemiesSpawned, 400)) <= 10) {
@@ -103,18 +75,15 @@ export class Play extends Phaser.Scene {
         }
     }
 
-    private enemyShoot(enemy: Enemy, time: number) {
-        if (enemy.texture.key === 'enemy3' || time - this.lastEnemyBulletShotAt < this.SHOT_DELAY * 2) return;
+    public enemyShoot(enemy: Enemy, time: number) {
+        if (time - this.lastEnemyBulletShotAt < this.SHOT_DELAY * 2) return;
         
         this.lastEnemyBulletShotAt = time;
         const bullet = this.enemyBulletPool.get() as Bullet;
         if (bullet) {
             const velocityY = Math.min(400 + Math.floor(this.registryHelper.enemiesSpawned / 50) * 50, 800);
             bullet.fire(enemy.x, enemy.y + 32, 0, velocityY);
-            
-            const damageMap: { [key: string]: number } = { 'enemy1': 4, 'enemy2': 5, 'enemy4': 2 };
-            bullet.setData('damage', damageMap[enemy.texture.key] || 1);
-            
+            bullet.setData('damage', enemy.config.bullet?.damage || 1);
             if (this.registryHelper.playSound) this.sound.play('enemy_shot');
         }
     }
@@ -129,32 +98,15 @@ export class Play extends Phaser.Scene {
     private enemyDown(enemy: Enemy) {
         enemy.disableBody(true, true);
         this.explode(enemy);
-        
-        const scoreMap: { [key: string]: number } = { 'enemy1': 2, 'enemy2': 3, 'enemy3': 4, 'enemy4': 1 };
-        this.registryHelper.score += scoreMap[enemy.texture.key] || 0;
-        
-        if (Phaser.Math.Between(1, 100) <= 4) {
-            this.genPowerup(enemy.x, enemy.y);
-        }
+        this.registryHelper.score += enemy.config.score;
+        if (Phaser.Math.Between(1, 100) <= 4) this.genPowerup(enemy.x, enemy.y);
     }
 
     private playerHit(player: Player, bullet: Bullet) {
-        const damage = bullet.getData('damage') || 1;
+        this.registryHelper.health -= bullet.getData('damage') || 1;
         bullet.disableBody(true, true);
-        
-        this.registryHelper.health -= damage;
-        
-        if (this.registryHelper.health <= 0) {
-            this.playerDown();
-        } else {
-            this.tweens.add({
-                targets: player,
-                alpha: 0.1,
-                duration: 100,
-                yoyo: true,
-                repeat: 5
-            });
-        }
+        if (this.registryHelper.health <= 0) this.playerDown();
+        else this.tweens.add({ targets: player, alpha: 0.1, duration: 100, yoyo: true, repeat: 5 });
     }
 
     private playerRammed(player: Player, enemy: Enemy) {
@@ -163,41 +115,28 @@ export class Play extends Phaser.Scene {
     }
 
     private playerDown() {
-        // Fully disable and hide the player immediately
         this.player.disableBody(true, true);
         this.explode(this.player);
-        
-        // Stop UI and Pause immediately
         this.scene.stop('UIScene');
         if (this.scene.isActive('PauseScene')) this.scene.stop('PauseScene');
-
-        // Use the global timer to ensure it survives even if the scene is paused or acting up
-        this.time.delayedCall(1000, () => {
-            this.scene.start('GameOver');
-        });
+        this.time.delayedCall(1000, () => this.scene.start('GameOver'));
     }
 
     private spawnEnemy() {
         const enemy = this.enemyPool.get() as Enemy;
         if (!enemy) return;
 
-        let type = 'enemy1';
-        let hp = 10;
-        const rand = Phaser.Math.Between(1, 10);
+        // Choose a random enemy type based on game progress
         const levelBonus = Math.min(Math.floor(this.registryHelper.enemiesSpawned / 100), 5);
+        const rand = Phaser.Math.Between(1, 10);
+        let typeKey: string;
 
-        if (rand <= 1 + levelBonus) {
-            type = 'enemy2';
-            hp = 15;
-        } else if (rand <= 2 + levelBonus) { // Fixed logical flaw
-            type = 'enemy3';
-            hp = 15;
-        } else if (rand <= 5) {
-            type = 'enemy4';
-            hp = 1;
-        }
-
-        enemy.spawn(hp, type);
+        if (rand <= 1 + levelBonus) typeKey = 'heavyGrunt';
+        else if (rand <= 2 + levelBonus) typeKey = 'kamikaze';
+        else if (rand <= 5) typeKey = 'scout';
+        else typeKey = 'grunt';
+        
+        enemy.spawn(EnemyTypes[typeKey]);
         this.registryHelper.enemiesSpawned++;
     }
 
@@ -213,25 +152,18 @@ export class Play extends Phaser.Scene {
     private genPowerup(x: number, y: number) {
         const powerup = this.powerupPool.get() as Powerup;
         if (!powerup) return;
-
         const isWeapon = Phaser.Math.Between(0, 1) === 0;
         const currentMode = this.registryHelper.weaponMode;
         const texture = isWeapon ? (currentMode === WeaponMode.SINGLE ? 'powerup_weapon2' : 'powerup_weapon3') : 'powerup_hp';
-        
         powerup.spawn(x, y, texture);
     }
 
     private collectPowerup(player: Player, powerup: Powerup) {
         const key = powerup.texture.key;
         powerup.disableBody(true, true);
-
         if (key.includes('weapon')) {
-            if (this.registryHelper.powerupShots < this.registryHelper.shotsFired) {
-                this.registryHelper.powerupShots = this.registryHelper.shotsFired;
-            }
-            if (this.registryHelper.weaponMode < WeaponMode.TRIPLE) {
-                this.registryHelper.weaponMode++;
-            }
+            if (this.registryHelper.powerupShots < this.registryHelper.shotsFired) this.registryHelper.powerupShots = this.registryHelper.shotsFired;
+            if (this.registryHelper.weaponMode < WeaponMode.TRIPLE) this.registryHelper.weaponMode++;
             this.registryHelper.powerupShots += this.WEAPON_POWERUP_LIMIT;
             if (this.registryHelper.playSound) this.sound.play('powerup');
         } else if (key === 'powerup_hp') {
