@@ -49,13 +49,15 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IMovable {
         const playScene = this.scene as Play;
         const context: IGameContext = {
             enemiesSpawned: playScene.registryHelper.enemiesSpawned,
+            score: playScene.registryHelper.score,
             player: playScene.player,
-            getRandom: Phaser.Math.Between
+            getRandom: Phaser.Math.Between,
+            enemyShoot: (entity, time) => playScene.enemyShoot(entity as Enemy, time)
         };
 
         // Let strategies handle behavior
         this.movementStrategy.update(this, context);
-        this.shootingStrategy.update(this, playScene, time);
+        this.shootingStrategy.update(this, context, time);
 
         // Self-destruct if off-screen
         if (this.y > 650) {

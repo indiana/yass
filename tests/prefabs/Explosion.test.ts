@@ -1,19 +1,20 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Explosion } from '../../src/prefabs/Explosion';
+import Phaser from 'phaser';
 
 // Mock Phaser completely to avoid DOM/Canvas issues
 vi.mock('phaser', () => {
     class MockSprite {
-        scene: any;
+        scene: unknown;
         active: boolean = true;
         visible: boolean = true;
-        _listeners: Record<string, Function> = {};
+        _listeners: Record<string, () => void> = {};
 
-        constructor(scene: any, x: number, y: number, texture: string) {
+        constructor(scene: unknown, _x: number, _y: number, _texture: string) {
             this.scene = scene;
         }
 
-        on(event: string, fn: Function) {
+        on(event: string, fn: () => void) {
             this._listeners[event] = fn;
             return this;
         }
@@ -45,23 +46,28 @@ vi.mock('phaser', () => {
     };
 });
 
+interface ExplosionWithMocks extends Explosion {
+    active: boolean;
+    visible: boolean;
+}
+
 describe('Explosion Prefab', () => {
     it('should deactivate and hide itself on animation complete', () => {
         const mockScene = {
             add: { existing: vi.fn() }
-        };
+        } as unknown as Phaser.Scene;
 
-        const explosion = new Explosion(mockScene as any, 0, 0);
+        const explosion = new Explosion(mockScene, 0, 0) as unknown as ExplosionWithMocks;
 
         // Verify initial state (mock defaults)
-        expect((explosion as any).active).toBe(true);
-        expect((explosion as any).visible).toBe(true);
+        expect(explosion.active).toBe(true);
+        expect(explosion.visible).toBe(true);
 
         // Trigger animation complete
-        (explosion as any).emit('animationcomplete');
+        explosion.emit('animationcomplete');
 
         // Verify state changed
-        expect((explosion as any).active).toBe(false);
-        expect((explosion as any).visible).toBe(false);
+        expect(explosion.active).toBe(false);
+        expect(explosion.visible).toBe(false);
     });
 });

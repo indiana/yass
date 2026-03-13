@@ -1,14 +1,12 @@
 // src/managers/PowerupSpawner.ts
-import Phaser from "phaser";
-import { Play } from "../scenes/Play";
-import { Powerup } from "../prefabs/Powerup";
 import { PowerupTypes, DEFAULT_POWERUP_TYPE, getRandomPowerupType } from '../configs/PowerupConfig';
+import { IPowerupSpawnerContext } from '../interfaces/IGameEntities';
 
 export class PowerupSpawner {
-    private scene: Play;
+    private context: IPowerupSpawnerContext;
 
-    constructor(scene: Play) {
-        this.scene = scene;
+    constructor(context: IPowerupSpawnerContext) {
+        this.context = context;
     }
 
     /**
@@ -21,8 +19,8 @@ export class PowerupSpawner {
         // Ensure enemyPowerupChance is a valid number, default to 0 if undefined/null
         const chance = enemyPowerupChance || 0;
 
-        if (Phaser.Math.Between(1, 100) <= chance) {
-            const powerup = this.scene.powerupPool.get() as Powerup;
+        if (this.context.getRandom(1, 100) <= chance) {
+            const powerup = this.context.getPowerup();
             if (!powerup) return; // Pool might be empty
 
             const typeKey = getRandomPowerupType();

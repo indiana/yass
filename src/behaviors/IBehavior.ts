@@ -1,6 +1,4 @@
 import { IMovable, IGameContext } from '../interfaces/IGameEntities';
-import { Enemy } from '../prefabs/Enemy';
-import { Play } from '../scenes/Play';
 
 // Interface for any movement logic
 export interface IMovementStrategy {
@@ -9,5 +7,5 @@ export interface IMovementStrategy {
 
 // Interface for any shooting logic
 export interface IShootingStrategy {
-    update(enemy: Enemy, scene: Play, time: number): void;
+    update(entity: IMovable, context: IGameContext, time: number): void;
 }

@@ -9,6 +9,7 @@ import { GameRegistry, WeaponMode } from "../utils/GameRegistry";
 import { SpawningConfiguration } from "../configs/SpawningConfig";
 import { EnemyTypes, DEFAULT_ENEMY_TYPE } from "../configs/EnemyConfig";
 import { PowerupSpawner } from "../managers/PowerupSpawner";
+import { IPowerupSpawnerContext } from "../interfaces/IGameEntities";
 
 export class Play extends Phaser.Scene {
     private SHOT_DELAY = 100;
@@ -20,7 +21,7 @@ export class Play extends Phaser.Scene {
   private playerBulletPool!: Phaser.Physics.Arcade.Group;
   private enemyBulletPool!: Phaser.Physics.Arcade.Group;
   private enemyPool!: Phaser.Physics.Arcade.Group;
-  public powerupPool!: Phaser.Physics.Arcade.Group;
+  private powerupPool!: Phaser.Physics.Arcade.Group;
   private explosionPool!: Phaser.GameObjects.Group;
 
   public registryHelper!: GameRegistry; // Public for strategies
@@ -67,7 +68,11 @@ export class Play extends Phaser.Scene {
 
     this.player = new Player(this, width / 2, 550, this.playerBulletPool);
 
-    this.powerupSpawner = new PowerupSpawner(this);
+    const spawnerContext: IPowerupSpawnerContext = {
+      getPowerup: () => this.powerupPool.get() as Powerup,
+      getRandom: Phaser.Math.Between
+    };
+    this.powerupSpawner = new PowerupSpawner(spawnerContext);
 
     this.scene.launch("UIScene");
 

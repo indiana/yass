@@ -2,8 +2,9 @@ import Phaser from "phaser";
 import { PowerupConfig } from "../configs/PowerupConfig";
 import { IPowerupEffectStrategy } from "../behaviors/IPowerupBehavior";
 import { Play } from "../scenes/Play";
+import { IPowerup } from "../interfaces/IGameEntities";
 
-export class Powerup extends Phaser.Physics.Arcade.Sprite {
+export class Powerup extends Phaser.Physics.Arcade.Sprite implements IPowerup {
   private effectStrategy!: IPowerupEffectStrategy;
   public config!: PowerupConfig; // Public for debugging if needed
 
