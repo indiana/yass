@@ -1,29 +1,27 @@
 import { IMovementStrategy } from './IBehavior';
-import { Enemy } from '../prefabs/Enemy';
-import { Play } from '../scenes/Play';
-import Phaser from 'phaser';
+import { IMovable, IGameContext } from '../interfaces/IGameEntities';
 
 // A strategy for enemies that do not move horizontally after their initial velocity is set.
 export class StaticXMovement implements IMovementStrategy {
-    update(_enemy: Enemy, _scene: Play): void {
+    update(_entity: IMovable, _context: IGameContext): void {
         // No ongoing horizontal movement logic needed.
     }
 }
 
 // A strategy for the sine-wave movement of the 'scout' enemy.
 export class SineWaveMovement implements IMovementStrategy {
-    update(enemy: Enemy, _scene: Play): void {
-        enemy.setVelocityX(200 * Math.sin(enemy.y * Math.PI / 300));
+    update(entity: IMovable, _context: IGameContext): void {
+        entity.setVelocityX(200 * Math.sin(entity.y * Math.PI / 300));
     }
 }
 
 // A strategy that gives enemies a chance to track the player's X position.
 export class PlayerTrackingMovement implements IMovementStrategy {
-    update(enemy: Enemy, scene: Play): void {
-        if (scene.registryHelper.enemiesSpawned > 50 && Phaser.Math.Between(1, 1000) === 1) {
-            const player = scene.player;
-            const velocityX = player.x > enemy.x ? Phaser.Math.Between(0, 200) : -Phaser.Math.Between(0, 200);
-            enemy.setVelocityX(velocityX);
+    update(entity: IMovable, context: IGameContext): void {
+        if (context.enemiesSpawned > 50 && context.getRandom(1, 1000) === 1) {
+            const player = context.player;
+            const velocityX = player.x > entity.x ? context.getRandom(0, 200) : -context.getRandom(0, 200);
+            entity.setVelocityX(velocityX);
         }
     }
 }

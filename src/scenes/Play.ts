@@ -145,7 +145,10 @@ export class Play extends Phaser.Scene {
     }
   }
 
-  private enemyHit(bullet: Bullet, enemy: Enemy) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private enemyHit(obj1: any, obj2: any) {
+    const bullet = obj1 as Bullet;
+    const enemy = obj2 as Enemy;
     bullet.disableBody(true, true);
     if (enemy.damage(5)) {
       this.enemyDown(enemy);
@@ -159,7 +162,10 @@ export class Play extends Phaser.Scene {
     this.powerupSpawner.trySpawnPowerup(enemy.x, enemy.y, enemy.config.powerupChance || 0);
   }
 
-  private playerHit(player: Player, bullet: Bullet) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private playerHit(obj1: any, obj2: any) {
+    const player = obj1 as Player;
+    const bullet = obj2 as Bullet;
     this.registryHelper.health -= bullet.getData("damage") || 1;
     bullet.disableBody(true, true);
     if (this.registryHelper.health <= 0) this.playerDown();
@@ -173,7 +179,9 @@ export class Play extends Phaser.Scene {
       });
   }
 
-  private playerRammed(player: Player, enemy: Enemy) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private playerRammed(obj1: any, obj2: any) {
+    const enemy = obj2 as Enemy;
     this.enemyDown(enemy);
     this.playerDown();
   }
@@ -236,8 +244,9 @@ export class Play extends Phaser.Scene {
   }
 
 
-
-  private collectPowerup(player: Player, powerup: Powerup) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private collectPowerup(obj1: any, obj2: any) {
+    const powerup = obj2 as Powerup;
     powerup.applyEffect(this);
     powerup.disableBody(true, true);
   }

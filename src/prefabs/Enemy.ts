@@ -2,8 +2,9 @@ import Phaser from 'phaser';
 import { IMovementStrategy, IShootingStrategy } from '../behaviors/IBehavior';
 import { EnemyConfig } from '../configs/EnemyConfig';
 import { Play } from '../scenes/Play';
+import { IMovable, IGameContext } from '../interfaces/IGameEntities';
 
-export class Enemy extends Phaser.Physics.Arcade.Sprite {
+export class Enemy extends Phaser.Physics.Arcade.Sprite implements IMovable {
     private movementStrategy!: IMovementStrategy;
     private shootingStrategy!: IShootingStrategy;
     public config!: EnemyConfig;
@@ -45,9 +46,16 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         
         if (!this.active) return;
         
+        const playScene = this.scene as Play;
+        const context: IGameContext = {
+            enemiesSpawned: playScene.registryHelper.enemiesSpawned,
+            player: playScene.player,
+            getRandom: Phaser.Math.Between
+        };
+
         // Let strategies handle behavior
-        this.movementStrategy.update(this, this.scene as Play);
-        this.shootingStrategy.update(this, this.scene as Play, time);
+        this.movementStrategy.update(this, context);
+        this.shootingStrategy.update(this, playScene, time);
 
         // Self-destruct if off-screen
         if (this.y > 650) {
