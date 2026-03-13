@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { Background } from "../prefabs/Background";
 import { Bullet } from "../prefabs/Bullet";
 import { Enemy } from "../prefabs/Enemy";
+import { Explosion } from "../prefabs/Explosion";
 import { Powerup } from "../prefabs/Powerup";
 import { Player } from "../prefabs/Player";
 import { GameRegistry, WeaponMode } from "../utils/GameRegistry";
@@ -58,8 +59,10 @@ export class Play extends Phaser.Scene {
       runChildUpdate: true,
     });
     this.explosionPool = this.add.group({
+      classType: Explosion,
       defaultKey: "explosion",
       maxSize: this.NUMBER_OF_EXPLOSIONS,
+      runChildUpdate: true,
     });
 
     this.player = new Player(this, width / 2, 550, this.playerBulletPool);
@@ -235,7 +238,7 @@ export class Play extends Phaser.Scene {
   }
 
   private explode(sprite: Phaser.GameObjects.Sprite) {
-    const explosion = this.explosionPool.get(sprite.x, sprite.y);
+    const explosion = this.explosionPool.get(sprite.x, sprite.y) as Explosion;
     if (explosion) {
       explosion.setActive(true).setVisible(true);
       explosion.play("explode");
