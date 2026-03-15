@@ -50,7 +50,7 @@ The project has successfully migrated from a legacy Phaser 2 architecture to a m
 1.  Implement a `WaveManager` to allow for more complex difficulty scaling and level progression.
 2.  Encapsulate projectile management to remove "callbacks" to the scene from behavior strategies.
 
-### Phase 5: Procedural Background Generation
-- Implement a dynamic, procedurally generated parallax background with stars and cosmic objects.
-- Explore and implement generation algorithms for star fields and nebulae.
-- Layer generated elements to create depth and parallax effect.
+### Phase 5: Procedural Background Generation [DONE]
+- [x] Implement a dynamic, procedurally generated parallax background with stars and cosmic objects.
+- [x] Explore and implement generation algorithms for star fields and nebulae.
+- [x] Layer generated elements to create depth and parallax effect.

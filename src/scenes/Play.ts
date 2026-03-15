@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { Background } from "../prefabs/Background";
+import { ProceduralBackground } from "../prefabs/ProceduralBackground";
 import { Bullet } from "../prefabs/Bullet";
 import { Enemy } from "../prefabs/Enemy";
 import { Explosion } from "../prefabs/Explosion";
@@ -22,7 +22,7 @@ export class Play extends Phaser.Scene {
   private WEAPON_POWERUP_LIMIT = GameConstants.WEAPON_POWERUP_LIMIT;
 
   public player!: Player; // Public for strategies
-  private background!: Background;
+  private background!: ProceduralBackground;
   private playerBulletPool!: Phaser.Physics.Arcade.Group;
   private enemyBulletPool!: Phaser.Physics.Arcade.Group;
   private enemyPool!: Phaser.Physics.Arcade.Group;
@@ -47,7 +47,7 @@ export class Play extends Phaser.Scene {
     this.registryHelper = new GameRegistry(this);
     this.registryHelper.reset();
 
-    this.background = new Background(this);
+    this.background = new ProceduralBackground(this);
 
     this.playerBulletPool = this.physics.add.group({
       classType: Bullet,
