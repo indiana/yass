@@ -10,14 +10,18 @@ export interface IPlayerEntity {
     y: number;
 }
 
+export interface IProjectileManager {
+    fire(x: number, y: number, velocityX: number, velocityY: number, damage: number, isPlayer: boolean): void;
+}
+
 export interface IGameContext {
     enemiesSpawned: number;
     score: number;
     player: IPlayerEntity;
     // Helper for random numbers to avoid direct Phaser dependency in logic
     getRandom(min: number, max: number): number;
-    // Method to trigger enemy fire from logic
-    enemyShoot(entity: IMovable, time: number): void;
+    // Decoupled projectile management
+    projectileManager: IProjectileManager;
 }
 
 export interface IPowerup {

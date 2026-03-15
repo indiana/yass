@@ -11,14 +11,13 @@ describe('DefaultPlayerShooting', () => {
         const mockContext: IPlayerContext = {
             weaponMode: WeaponMode.SINGLE,
             canShoot: vi.fn().mockReturnValue(true),
-            fireBullet: vi.fn(),
-            playSound: vi.fn(),
+            projectileManager: { fire: vi.fn() },
             onShootSuccess: vi.fn()
         };
 
         strategy.update(mockPlayer, mockInput, mockContext, 100);
 
-        expect(mockContext.fireBullet).not.toHaveBeenCalled();
+        expect(mockContext.projectileManager.fire).not.toHaveBeenCalled();
     });
 
     it('should not shoot if canShoot returns false', () => {
@@ -28,14 +27,13 @@ describe('DefaultPlayerShooting', () => {
         const mockContext: IPlayerContext = {
             weaponMode: WeaponMode.SINGLE,
             canShoot: vi.fn().mockReturnValue(false),
-            fireBullet: vi.fn(),
-            playSound: vi.fn(),
+            projectileManager: { fire: vi.fn() },
             onShootSuccess: vi.fn()
         };
 
         strategy.update(mockPlayer, mockInput, mockContext, 100);
 
-        expect(mockContext.fireBullet).not.toHaveBeenCalled();
+        expect(mockContext.projectileManager.fire).not.toHaveBeenCalled();
     });
 
     it('should fire single bullet in SINGLE mode', () => {
@@ -45,17 +43,15 @@ describe('DefaultPlayerShooting', () => {
         const mockContext: IPlayerContext = {
             weaponMode: WeaponMode.SINGLE,
             canShoot: vi.fn().mockReturnValue(true),
-            fireBullet: vi.fn(),
-            playSound: vi.fn(),
+            projectileManager: { fire: vi.fn() },
             onShootSuccess: vi.fn()
         };
 
         strategy.update(mockPlayer, mockInput, mockContext, 100);
 
-        expect(mockContext.fireBullet).toHaveBeenCalledTimes(1);
-        expect(mockContext.fireBullet).toHaveBeenCalledWith(400, 490, 0, -500);
+        expect(mockContext.projectileManager.fire).toHaveBeenCalledTimes(1);
+        expect(mockContext.projectileManager.fire).toHaveBeenCalledWith(400, 490, 0, -500, 1, true);
         expect(mockContext.onShootSuccess).toHaveBeenCalledWith(100);
-        expect(mockContext.playSound).toHaveBeenCalledWith('player_shot');
     });
 
     it('should fire two bullets in DOUBLE mode', () => {
@@ -65,16 +61,15 @@ describe('DefaultPlayerShooting', () => {
         const mockContext: IPlayerContext = {
             weaponMode: WeaponMode.DOUBLE,
             canShoot: vi.fn().mockReturnValue(true),
-            fireBullet: vi.fn(),
-            playSound: vi.fn(),
+            projectileManager: { fire: vi.fn() },
             onShootSuccess: vi.fn()
         };
 
         strategy.update(mockPlayer, mockInput, mockContext, 100);
 
-        expect(mockContext.fireBullet).toHaveBeenCalledTimes(2);
-        expect(mockContext.fireBullet).toHaveBeenCalledWith(380, 490, 0, -500); // 400 - 20
-        expect(mockContext.fireBullet).toHaveBeenCalledWith(420, 490, 0, -500); // 400 + 20
+        expect(mockContext.projectileManager.fire).toHaveBeenCalledTimes(2);
+        expect(mockContext.projectileManager.fire).toHaveBeenCalledWith(380, 490, 0, -500, 1, true); // 400 - 20
+        expect(mockContext.projectileManager.fire).toHaveBeenCalledWith(420, 490, 0, -500, 1, true); // 400 + 20
     });
 
     it('should fire three bullets in TRIPLE mode', () => {
@@ -84,16 +79,15 @@ describe('DefaultPlayerShooting', () => {
         const mockContext: IPlayerContext = {
             weaponMode: WeaponMode.TRIPLE,
             canShoot: vi.fn().mockReturnValue(true),
-            fireBullet: vi.fn(),
-            playSound: vi.fn(),
+            projectileManager: { fire: vi.fn() },
             onShootSuccess: vi.fn()
         };
 
         strategy.update(mockPlayer, mockInput, mockContext, 100);
 
-        expect(mockContext.fireBullet).toHaveBeenCalledTimes(3);
-        expect(mockContext.fireBullet).toHaveBeenCalledWith(400, 490, 0, -500); // center
-        expect(mockContext.fireBullet).toHaveBeenCalledWith(380, 490, -50, -500); // left
-        expect(mockContext.fireBullet).toHaveBeenCalledWith(420, 490, 50, -500); // right
+        expect(mockContext.projectileManager.fire).toHaveBeenCalledTimes(3);
+        expect(mockContext.projectileManager.fire).toHaveBeenCalledWith(400, 490, 0, -500, 1, true); // center
+        expect(mockContext.projectileManager.fire).toHaveBeenCalledWith(380, 490, -50, -500, 1, true); // left
+        expect(mockContext.projectileManager.fire).toHaveBeenCalledWith(420, 490, 50, -500, 1, true); // right
     });
 });

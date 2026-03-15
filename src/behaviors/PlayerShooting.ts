@@ -22,10 +22,16 @@ export class DefaultPlayerShooting implements IPlayerShootingStrategy {
                 else if (i === 2) { offsetX = 20; velocityX = 50; }
             }
             
-            context.fireBullet(player.x + offsetX, player.y - 10, velocityX, -this.BULLET_SPEED);
+            context.projectileManager.fire(
+                player.x + offsetX, 
+                player.y - 10, 
+                velocityX, 
+                -this.BULLET_SPEED,
+                1, // Damage
+                true // isPlayer
+            );
         }
 
         context.onShootSuccess(time);
-        context.playSound('player_shot');
     }
 }

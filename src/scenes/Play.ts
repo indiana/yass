@@ -6,8 +6,7 @@ import { Explosion } from "../prefabs/Explosion";
 import { Powerup } from "../prefabs/Powerup";
 import { Player } from "../prefabs/Player";
 import { GameRegistry, WeaponMode } from "../utils/GameRegistry";
-import { SpawningConfiguration } from "../configs/SpawningConfig";
-import { EnemyTypes, DEFAULT_ENEMY_TYPE } from "../configs/EnemyConfig";
+import { EnemyTypes } from "../configs/EnemyConfig";
 import { PowerupSpawner } from "../managers/PowerupSpawner";
 import { IPowerupSpawnerContext } from "../interfaces/IGameEntities";
 import { GameConstants } from "../configs/GameConstants";
@@ -15,10 +14,10 @@ import {
   CollisionManager,
   ICollisionManagerContext,
 } from "../managers/CollisionManager";
+import { ProjectileManager } from "../managers/ProjectileManager";
+import { WaveManager, IWaveContext } from "../managers/WaveManager";
 
 export class Play extends Phaser.Scene {
-  private SHOT_DELAY = GameConstants.SHOT_DELAY;
-  private NUMBER_OF_EXPLOSIONS = GameConstants.NUMBER_OF_EXPLOSIONS;
   private WEAPON_POWERUP_LIMIT = GameConstants.WEAPON_POWERUP_LIMIT;
 
   public player!: Player; // Public for strategies
@@ -30,13 +29,13 @@ export class Play extends Phaser.Scene {
   private explosionPool!: Phaser.GameObjects.Group;
 
   public registryHelper!: GameRegistry; // Public for strategies
-  private lastEnemyBulletShotAt = 0;
   private sKey!: Phaser.Input.Keyboard.Key;
   private pKey!: Phaser.Input.Keyboard.Key;
 
-  private currentSpawnStage = SpawningConfiguration[0];
   private powerupSpawner!: PowerupSpawner;
   private collisionManager!: CollisionManager;
+  public projectileManager!: ProjectileManager;
+  private waveManager!: WaveManager;
 
   constructor() {
     super("Play");
@@ -68,11 +67,18 @@ export class Play extends Phaser.Scene {
     this.explosionPool = this.add.group({
       classType: Explosion,
       defaultKey: "explosion",
-      maxSize: this.NUMBER_OF_EXPLOSIONS,
+      maxSize: GameConstants.NUMBER_OF_EXPLOSIONS,
       runChildUpdate: true,
     });
 
-    this.player = new Player(this, width / 2, 550, this.playerBulletPool);
+    this.projectileManager = new ProjectileManager(
+      this,
+      this.registryHelper,
+      this.playerBulletPool,
+      this.enemyBulletPool
+    );
+
+    this.player = new Player(this, width / 2, 550, this.projectileManager);
 
     const spawnerContext: IPowerupSpawnerContext = {
       getPowerup: () => this.powerupPool.get() as Powerup,
@@ -89,6 +95,8 @@ export class Play extends Phaser.Scene {
       enemyPool: this.enemyPool,
     };
     this.collisionManager = new CollisionManager(collisionContext);
+
+    this.waveManager = new WaveManager();
 
     this.scene.launch("UIScene");
 
@@ -124,23 +132,21 @@ export class Play extends Phaser.Scene {
       this
     );
 
-    this.spawnEnemy();
+    this.spawnEnemyByType("grunt"); // Initial spawn
   }
 
-  update(_time: number) {
+  update(time: number) {
     if (Phaser.Input.Keyboard.JustDown(this.sKey))
       this.registryHelper.toggleSound();
     if (Phaser.Input.Keyboard.JustDown(this.pKey)) this.pauseGame();
 
-    // Spawn logic
-    if (
-      Phaser.Math.Between(
-        1,
-        500 - Math.min(this.registryHelper.enemiesSpawned, 400)
-      ) <= 10
-    ) {
-      this.spawnEnemy();
-    }
+    // Delegate spawning to WaveManager
+    const waveContext: IWaveContext = {
+      enemiesSpawned: this.registryHelper.enemiesSpawned,
+      spawnEnemy: (type) => this.spawnEnemyByType(type),
+      getRandom: Phaser.Math.Between,
+    };
+    this.waveManager.update(time, waveContext);
 
     // Weapon mode degradation
     if (
@@ -154,58 +160,9 @@ export class Play extends Phaser.Scene {
     }
   }
 
-
-  public enemyShoot(enemy: Enemy, time: number) {
-    if (time - this.lastEnemyBulletShotAt < this.SHOT_DELAY * 2) return;
-
-    this.lastEnemyBulletShotAt = time;
-    const bullet = this.enemyBulletPool.get() as Bullet;
-    if (bullet) {
-      const velocityY = Math.min(
-        400 + Math.floor(this.registryHelper.enemiesSpawned / 50) * 50,
-        800
-      );
-      bullet.fire(enemy.x, enemy.y + 32, 0, velocityY);
-      bullet.setData("damage", enemy.config.bullet?.damage || 1);
-      if (this.registryHelper.playSound) this.sound.play("enemy_shot");
-    }
-  }
-
-  private selectEnemyType(): string {
-    // Find the correct spawn stage based on the number of enemies spawned
-    const enemiesSpawned = this.registryHelper.enemiesSpawned;
-    for (let i = SpawningConfiguration.length - 1; i >= 0; i--) {
-      const stage = SpawningConfiguration[i];
-      if (enemiesSpawned >= stage.minEnemiesSpawned) {
-        this.currentSpawnStage = stage;
-        break;
-      }
-    }
-
-    // Calculate the total weight of the current spawn pool
-    const totalWeight = this.currentSpawnStage.spawnPool.reduce(
-      (sum, enemy) => sum + enemy.weight,
-      0
-    );
-    if (totalWeight === 0) return DEFAULT_ENEMY_TYPE; // Failsafe
-
-    // Pick a random number and find the corresponding enemy type
-    let randomWeight = Phaser.Math.FloatBetween(0, totalWeight);
-    for (const spawnable of this.currentSpawnStage.spawnPool) {
-      randomWeight -= spawnable.weight;
-      if (randomWeight <= 0) {
-        return spawnable.type;
-      }
-    }
-
-    return DEFAULT_ENEMY_TYPE; // Failsafe in case of floating point issues
-  }
-
-  private spawnEnemy() {
+  private spawnEnemyByType(typeKey: string) {
     const enemy = this.enemyPool.get() as Enemy;
     if (!enemy) return;
-
-    const typeKey = this.selectEnemyType();
 
     enemy.spawn(EnemyTypes[typeKey]);
     this.registryHelper.incrementEnemiesSpawned();

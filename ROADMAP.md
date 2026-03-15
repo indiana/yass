@@ -46,9 +46,9 @@ The project has successfully migrated from a legacy Phaser 2 architecture to a m
 1.  [x] Audit and remove all `any` types to ensure full TypeScript coverage.
 2.  [x] Standardize `GameRegistry` for all game state interactions.
 
-### Phase 4: Long-term (Feature Scaling)
-1.  Implement a `WaveManager` to allow for more complex difficulty scaling and level progression.
-2.  Encapsulate projectile management to remove "callbacks" to the scene from behavior strategies.
+### Phase 4: Long-term (Feature Scaling) [DONE]
+1.  [x] Implement a `WaveManager` to allow for more complex difficulty scaling and level progression.
+2.  [x] Encapsulate projectile management to remove "callbacks" to the scene from behavior strategies.
 
 ### Phase 5: Procedural Background Generation [DONE]
 - [x] Implement a dynamic, procedurally generated parallax background with stars and cosmic objects.

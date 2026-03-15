@@ -15,34 +15,36 @@ describe('Shooting Strategies', () => {
     });
 
     describe('ProbabilisticShooting', () => {
-        it('should call enemyShoot when random check passes', () => {
+        it('should call projectileManager.fire when random check passes', () => {
             const strategy = new ProbabilisticShooting();
-            const mockEntity = {} as IMovable;
+            const mockEntity = { x: 100, y: 200 } as IMovable;
             const mockContext: IGameContext = {
                 score: 0,
                 getRandom: vi.fn().mockReturnValue(1), // Always 1, which is <= 10
-                enemyShoot: vi.fn(),
+                projectileManager: { fire: vi.fn() },
                 enemiesSpawned: 0,
                 player: { x: 0, y: 0 }
             };
 
             strategy.update(mockEntity, mockContext, 100);
-            expect(mockContext.enemyShoot).toHaveBeenCalledWith(mockEntity, 100);
+            expect(mockContext.projectileManager.fire).toHaveBeenCalledWith(
+                100, 232, 0, 400, 1, false
+            );
         });
 
-        it('should NOT call enemyShoot when random check fails', () => {
+        it('should NOT call projectileManager.fire when random check fails', () => {
             const strategy = new ProbabilisticShooting();
             const mockEntity = {} as IMovable;
             const mockContext: IGameContext = {
                 score: 0,
                 getRandom: vi.fn().mockReturnValue(11), // 11 > 10
-                enemyShoot: vi.fn(),
+                projectileManager: { fire: vi.fn() },
                 enemiesSpawned: 0,
                 player: { x: 0, y: 0 }
             };
 
             strategy.update(mockEntity, mockContext, 100);
-            expect(mockContext.enemyShoot).not.toHaveBeenCalled();
+            expect(mockContext.projectileManager.fire).not.toHaveBeenCalled();
         });
 
         it('should adjust fireChance based on score', () => {

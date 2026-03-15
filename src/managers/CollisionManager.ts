@@ -46,12 +46,19 @@ export class CollisionManager {
     if (this.context.registry.health <= 0) {
       this.playerDown(player);
     } else {
+      // Remove any existing flash tweens to prevent overlapping alpha issues
+      this.context.scene.tweens.killTweensOf(player);
+      player.setAlpha(1.0); // Reset alpha before starting new flash
+
       this.context.scene.tweens.add({
         targets: player,
         alpha: 0.1,
         duration: 100,
         yoyo: true,
         repeat: 5,
+        onComplete: () => {
+          player.setAlpha(1.0);
+        },
       });
     }
   }

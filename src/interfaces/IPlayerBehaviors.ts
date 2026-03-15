@@ -15,11 +15,12 @@ export interface IPlayerInput {
     shootDown: boolean;
 }
 
+import { IProjectileManager } from './IGameEntities';
+
 export interface IPlayerContext {
     weaponMode: WeaponMode;
     canShoot(time: number): boolean;
-    fireBullet(x: number, y: number, vx: number, vy: number): void;
-    playSound(key: string): void;
+    projectileManager: IProjectileManager;
     onShootSuccess(time: number): void;
 }
 

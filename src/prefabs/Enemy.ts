@@ -52,7 +52,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IMovable {
             score: playScene.registryHelper.score,
             player: playScene.player,
             getRandom: Phaser.Math.Between,
-            enemyShoot: (entity, time) => playScene.enemyShoot(entity as Enemy, time)
+            projectileManager: playScene.projectileManager
         };
 
         // Let strategies handle behavior

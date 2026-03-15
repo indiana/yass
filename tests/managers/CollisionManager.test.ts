@@ -22,7 +22,10 @@ describe('CollisionManager', () => {
 
     beforeEach(() => {
         mockScene = {
-            tweens: { add: vi.fn() },
+            tweens: { 
+                add: vi.fn(),
+                killTweensOf: vi.fn()
+            },
             scene: { stop: vi.fn(), start: vi.fn(), isActive: vi.fn() },
             time: { delayedCall: vi.fn() },
             sound: { play: vi.fn() }
@@ -86,7 +89,7 @@ describe('CollisionManager', () => {
     });
 
     it('handlePlayerHit should damage player', () => {
-        const player = { disableBody: vi.fn() } as any;
+        const player = { disableBody: vi.fn(), setAlpha: vi.fn() } as any;
         const bullet = { disableBody: vi.fn(), getData: vi.fn().mockReturnValue(2) } as any;
         
         manager.handlePlayerHit(player, bullet);

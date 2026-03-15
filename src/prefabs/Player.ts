@@ -4,19 +4,21 @@ import { WeaponMode } from '../utils/GameRegistry';
 import { IPlayerMovable, IPlayerInput, IPlayerContext, IPlayerMovementStrategy, IPlayerShootingStrategy } from '../interfaces/IPlayerBehaviors';
 import { DefaultPlayerMovement } from '../behaviors/PlayerMovement';
 import { DefaultPlayerShooting } from '../behaviors/PlayerShooting';
+import { Play } from '../scenes/Play';
+import { IProjectileManager } from '../interfaces/IGameEntities';
 
 export class Player extends Phaser.Physics.Arcade.Sprite implements IPlayerMovable {
     private SHOT_DELAY = 100;
     
     private lastBulletShotAt = 0;
-    private bulletPool: Phaser.Physics.Arcade.Group;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private spaceKey: Phaser.Input.Keyboard.Key;
 
     private movementStrategy: IPlayerMovementStrategy;
     private shootingStrategy: IPlayerShootingStrategy;
+    private projectileManager: IProjectileManager;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, bulletPool: Phaser.Physics.Arcade.Group) {
+    constructor(scene: Play, x: number, y: number, projectileManager: IProjectileManager) {
         super(scene, x, y, 'player');
         
         scene.add.existing(this);
@@ -27,7 +29,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IPlayerMovab
         this.setMaxVelocity(500, 0); // MAX_SPEED
         this.play('player_flame');
         
-        this.bulletPool = bulletPool;
+        this.projectileManager = projectileManager;
         this.cursors = scene.input.keyboard!.createCursorKeys();
         this.spaceKey = scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
@@ -38,6 +40,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IPlayerMovab
     preUpdate(time: number, delta: number) {
         super.preUpdate(time, delta);
         
+        const playScene = this.scene as Play;
         const input: IPlayerInput = {
             leftDown: this.cursors.left.isDown,
             rightDown: this.cursors.right.isDown,
@@ -47,22 +50,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IPlayerMovab
         this.movementStrategy.update(this, input);
 
         const context: IPlayerContext = {
-            weaponMode: this.scene.registry.get('weaponMode') || WeaponMode.SINGLE,
+            weaponMode: playScene.registryHelper.weaponMode,
             canShoot: (t) => this.active && t - this.lastBulletShotAt >= this.SHOT_DELAY,
-            fireBullet: (x, y, vx, vy) => {
-                const bullet = this.bulletPool.get() as Bullet;
-                if (bullet) {
-                    bullet.fire(x, y, vx, vy);
-                }
-            },
+            projectileManager: this.projectileManager,
             onShootSuccess: (t) => {
                 this.lastBulletShotAt = t;
-                this.scene.registry.set('shotsFired', (this.scene.registry.get('shotsFired') || 0) + 1);
-            },
-            playSound: (key) => {
-                if (this.scene.registry.get('playSound') !== false) {
-                    this.scene.sound.play(key);
-                }
+                playScene.registryHelper.incrementShotsFired();
             }
         };
 
