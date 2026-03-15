@@ -10,11 +10,16 @@ import { SpawningConfiguration } from "../configs/SpawningConfig";
 import { EnemyTypes, DEFAULT_ENEMY_TYPE } from "../configs/EnemyConfig";
 import { PowerupSpawner } from "../managers/PowerupSpawner";
 import { IPowerupSpawnerContext } from "../interfaces/IGameEntities";
+import { GameConstants } from "../configs/GameConstants";
+import {
+  CollisionManager,
+  ICollisionManagerContext,
+} from "../managers/CollisionManager";
 
 export class Play extends Phaser.Scene {
-    private SHOT_DELAY = 100;
-    private NUMBER_OF_EXPLOSIONS = 20;
-    private WEAPON_POWERUP_LIMIT = 500;
+  private SHOT_DELAY = GameConstants.SHOT_DELAY;
+  private NUMBER_OF_EXPLOSIONS = GameConstants.NUMBER_OF_EXPLOSIONS;
+  private WEAPON_POWERUP_LIMIT = GameConstants.WEAPON_POWERUP_LIMIT;
 
   public player!: Player; // Public for strategies
   private background!: Background;
@@ -31,6 +36,7 @@ export class Play extends Phaser.Scene {
 
   private currentSpawnStage = SpawningConfiguration[0];
   private powerupSpawner!: PowerupSpawner;
+  private collisionManager!: CollisionManager;
 
   constructor() {
     super("Play");
@@ -70,9 +76,19 @@ export class Play extends Phaser.Scene {
 
     const spawnerContext: IPowerupSpawnerContext = {
       getPowerup: () => this.powerupPool.get() as Powerup,
-      getRandom: Phaser.Math.Between
+      getRandom: Phaser.Math.Between,
     };
     this.powerupSpawner = new PowerupSpawner(spawnerContext);
+
+    // Initialize Collision Manager
+    const collisionContext: ICollisionManagerContext = {
+      scene: this,
+      registry: this.registryHelper,
+      powerupSpawner: this.powerupSpawner,
+      explosionPool: this.explosionPool,
+      enemyPool: this.enemyPool,
+    };
+    this.collisionManager = new CollisionManager(collisionContext);
 
     this.scene.launch("UIScene");
 
@@ -82,30 +98,30 @@ export class Play extends Phaser.Scene {
     this.physics.add.overlap(
       this.playerBulletPool,
       this.enemyPool,
-      this.enemyHit,
+      (b, e) => this.collisionManager.handleEnemyHit(b, e),
       undefined,
-      this,
+      this
     );
     this.physics.add.overlap(
       this.enemyBulletPool,
       this.player,
-      this.playerHit,
+      (p, b) => this.collisionManager.handlePlayerHit(p, b),
       undefined,
-      this,
+      this
     );
     this.physics.add.overlap(
       this.enemyPool,
       this.player,
-      this.playerRammed,
+      (p, e) => this.collisionManager.handlePlayerRammed(p, e),
       undefined,
-      this,
+      this
     );
     this.physics.add.overlap(
       this.powerupPool,
       this.player,
-      this.collectPowerup,
+      (p, pu) => this.collisionManager.handleCollectPowerup(p, pu),
       undefined,
-      this,
+      this
     );
 
     this.spawnEnemy();
@@ -120,7 +136,7 @@ export class Play extends Phaser.Scene {
     if (
       Phaser.Math.Between(
         1,
-        500 - Math.min(this.registryHelper.enemiesSpawned, 400),
+        500 - Math.min(this.registryHelper.enemiesSpawned, 400)
       ) <= 10
     ) {
       this.spawnEnemy();
@@ -145,61 +161,12 @@ export class Play extends Phaser.Scene {
     if (bullet) {
       const velocityY = Math.min(
         400 + Math.floor(this.registryHelper.enemiesSpawned / 50) * 50,
-        800,
+        800
       );
       bullet.fire(enemy.x, enemy.y + 32, 0, velocityY);
       bullet.setData("damage", enemy.config.bullet?.damage || 1);
       if (this.registryHelper.playSound) this.sound.play("enemy_shot");
     }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private enemyHit(obj1: any, obj2: any) {
-    const bullet = obj1 as Bullet;
-    const enemy = obj2 as Enemy;
-    bullet.disableBody(true, true);
-    if (enemy.damage(5)) {
-      this.enemyDown(enemy);
-    }
-  }
-
-  private enemyDown(enemy: Enemy) {
-    enemy.disableBody(true, true);
-    this.explode(enemy);
-    this.registryHelper.score += enemy.config.score;
-    this.powerupSpawner.trySpawnPowerup(enemy.x, enemy.y, enemy.config.powerupChance || 0);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private playerHit(obj1: any, obj2: any) {
-    const player = obj1 as Player;
-    const bullet = obj2 as Bullet;
-    this.registryHelper.health -= bullet.getData("damage") || 1;
-    bullet.disableBody(true, true);
-    if (this.registryHelper.health <= 0) this.playerDown();
-    else
-      this.tweens.add({
-        targets: player,
-        alpha: 0.1,
-        duration: 100,
-        yoyo: true,
-        repeat: 5,
-      });
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private playerRammed(obj1: any, obj2: any) {
-    const enemy = obj2 as Enemy;
-    this.enemyDown(enemy);
-    this.playerDown();
-  }
-
-  private playerDown() {
-    this.player.disableBody(true, true);
-    this.explode(this.player);
-    this.scene.stop("UIScene");
-    if (this.scene.isActive("PauseScene")) this.scene.stop("PauseScene");
-    this.time.delayedCall(1000, () => this.scene.start("GameOver"));
   }
 
   private selectEnemyType(): string {
@@ -216,7 +183,7 @@ export class Play extends Phaser.Scene {
     // Calculate the total weight of the current spawn pool
     const totalWeight = this.currentSpawnStage.spawnPool.reduce(
       (sum, enemy) => sum + enemy.weight,
-      0,
+      0
     );
     if (totalWeight === 0) return DEFAULT_ENEMY_TYPE; // Failsafe
 
@@ -240,23 +207,6 @@ export class Play extends Phaser.Scene {
 
     enemy.spawn(EnemyTypes[typeKey]);
     this.registryHelper.enemiesSpawned++;
-  }
-
-  private explode(sprite: Phaser.GameObjects.Sprite) {
-    const explosion = this.explosionPool.get(sprite.x, sprite.y) as Explosion;
-    if (explosion) {
-      explosion.setActive(true).setVisible(true);
-      explosion.play("explode");
-      if (this.registryHelper.playSound) this.sound.play("enemy_explode");
-    }
-  }
-
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private collectPowerup(obj1: any, obj2: any) {
-    const powerup = obj2 as Powerup;
-    powerup.applyEffect(this);
-    powerup.disableBody(true, true);
   }
 
   private pauseGame() {

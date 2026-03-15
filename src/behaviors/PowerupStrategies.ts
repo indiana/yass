@@ -2,6 +2,7 @@ import { IPowerupSprite, IPowerupEffectStrategy } from "./IPowerupBehavior";
 import { Play } from "../scenes/Play";
 import { Powerup } from "../prefabs/Powerup";
 import { WeaponMode } from "../utils/GameRegistry";
+import { GameConstants } from "../configs/GameConstants";
 
 
 // --- Sprite Strategies ---
@@ -27,12 +28,11 @@ export class WeaponSprite implements IPowerupSprite {
 export class HpEffectStrategy implements IPowerupEffectStrategy {
   apply(_powerup: Powerup, scene: Play): void {
     const playerHealth = scene.registryHelper.health;
-    scene.registryHelper.health = Math.min(10, playerHealth + 5);
+    scene.registryHelper.health = Math.min(GameConstants.PLAYER.INITIAL_HEALTH, playerHealth + 5);
   }
 }
 
 export class WeaponEffectStrategy implements IPowerupEffectStrategy {
-  private WEAPON_POWERUP_LIMIT = 500; // Define as a constant if used elsewhere
 
   apply(_powerup: Powerup, scene: Play): void {
     const registry = scene.registryHelper;
@@ -43,7 +43,7 @@ export class WeaponEffectStrategy implements IPowerupEffectStrategy {
     if (registry.weaponMode < WeaponMode.TRIPLE) {
       registry.weaponMode++;
     }
-    registry.powerupShots += this.WEAPON_POWERUP_LIMIT;
+    registry.powerupShots += GameConstants.WEAPON_POWERUP_LIMIT;
 
     if (registry.playSound) {
       scene.sound.play("powerup");
