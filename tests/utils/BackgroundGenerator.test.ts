@@ -7,6 +7,10 @@ vi.mock('phaser', () => ({
         Math: {
             Between: vi.fn((min, max) => Math.floor(Math.random() * (max - min + 1) + min)),
             FloatBetween: vi.fn((min, max) => Math.random() * (max - min) + min)
+        },
+        BlendModes: {
+            ADD: 1,
+            NORMAL: 0
         }
     }
 }));
@@ -20,12 +24,17 @@ describe('BackgroundGenerator', () => {
             fillStyle: vi.fn().mockReturnThis(),
             fillCircle: vi.fn().mockReturnThis(),
             generateTexture: vi.fn().mockReturnThis(),
-            destroy: vi.fn()
+            destroy: vi.fn(),
+            setBlendMode: vi.fn()
         };
 
         mockScene = {
             make: {
                 graphics: vi.fn().mockReturnValue(mockGraphics)
+            },
+            textures: {
+                exists: vi.fn().mockReturnValue(true), // Mock as true for simplicity
+                remove: vi.fn()
             }
         };
     });
