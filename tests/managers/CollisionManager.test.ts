@@ -30,7 +30,15 @@ describe('CollisionManager', () => {
         mockRegistry = {
             health: 10,
             score: 0,
-            playSound: true
+            playSound: true,
+            damagePlayer: vi.fn((amount) => { mockRegistry.health -= amount; }),
+            addScore: vi.fn((amount) => { mockRegistry.score += amount; }),
+            healPlayer: vi.fn(),
+            upgradeWeapon: vi.fn(),
+            downgradeWeapon: vi.fn(),
+            setPowerupShots: vi.fn(),
+            addPowerupShots: vi.fn(),
+            toggleSound: vi.fn()
         };
         mockPowerupSpawner = { trySpawnPowerup: vi.fn() };
         mockExplosionPool = { get: vi.fn() };

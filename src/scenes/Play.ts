@@ -129,7 +129,7 @@ export class Play extends Phaser.Scene {
 
   update(_time: number) {
     if (Phaser.Input.Keyboard.JustDown(this.sKey))
-      this.registryHelper.playSound = !this.registryHelper.playSound;
+      this.registryHelper.toggleSound();
     if (Phaser.Input.Keyboard.JustDown(this.pKey)) this.pauseGame();
 
     // Spawn logic
@@ -147,11 +147,13 @@ export class Play extends Phaser.Scene {
       this.registryHelper.weaponMode > WeaponMode.SINGLE &&
       this.registryHelper.powerupShots <= this.registryHelper.shotsFired
     ) {
-      this.registryHelper.weaponMode--;
-      this.registryHelper.powerupShots =
-        this.registryHelper.shotsFired + this.WEAPON_POWERUP_LIMIT;
+      this.registryHelper.downgradeWeapon();
+      this.registryHelper.setPowerupShots(
+        this.registryHelper.shotsFired + this.WEAPON_POWERUP_LIMIT
+      );
     }
   }
+
 
   public enemyShoot(enemy: Enemy, time: number) {
     if (time - this.lastEnemyBulletShotAt < this.SHOT_DELAY * 2) return;
@@ -206,7 +208,7 @@ export class Play extends Phaser.Scene {
     const typeKey = this.selectEnemyType();
 
     enemy.spawn(EnemyTypes[typeKey]);
-    this.registryHelper.enemiesSpawned++;
+    this.registryHelper.incrementEnemiesSpawned();
   }
 
   private pauseGame() {

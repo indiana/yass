@@ -27,8 +27,7 @@ export class WeaponSprite implements IPowerupSprite {
 
 export class HpEffectStrategy implements IPowerupEffectStrategy {
   apply(_powerup: Powerup, scene: Play): void {
-    const playerHealth = scene.registryHelper.health;
-    scene.registryHelper.health = Math.min(GameConstants.PLAYER.INITIAL_HEALTH, playerHealth + 5);
+    scene.registryHelper.healPlayer(5);
   }
 }
 
@@ -38,12 +37,11 @@ export class WeaponEffectStrategy implements IPowerupEffectStrategy {
     const registry = scene.registryHelper;
 
     if (registry.powerupShots < registry.shotsFired) {
-      registry.powerupShots = registry.shotsFired;
+      registry.setPowerupShots(registry.shotsFired);
     }
-    if (registry.weaponMode < WeaponMode.TRIPLE) {
-      registry.weaponMode++;
-    }
-    registry.powerupShots += GameConstants.WEAPON_POWERUP_LIMIT;
+    
+    registry.upgradeWeapon();
+    registry.addPowerupShots(GameConstants.WEAPON_POWERUP_LIMIT);
 
     if (registry.playSound) {
       scene.sound.play("powerup");

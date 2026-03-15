@@ -36,7 +36,8 @@ describe('GameRegistry', () => {
     });
 
     it('should set score to registry', () => {
-        gameRegistry.score = 500;
+        mockRegistry.get.mockReturnValue(100);
+        gameRegistry.addScore(400);
         expect(mockRegistry.set).toHaveBeenCalledWith('score', 500);
     });
 
@@ -49,8 +50,27 @@ describe('GameRegistry', () => {
         mockRegistry.get.mockReturnValue(WeaponMode.DOUBLE);
         expect(gameRegistry.weaponMode).toBe(WeaponMode.DOUBLE);
 
-        gameRegistry.weaponMode = WeaponMode.TRIPLE;
+        gameRegistry.upgradeWeapon();
+        // Since double + 1 is triple
         expect(mockRegistry.set).toHaveBeenCalledWith('weaponMode', WeaponMode.TRIPLE);
+    });
+
+    it('should handle player damage', () => {
+        mockRegistry.get.mockReturnValue(10);
+        gameRegistry.damagePlayer(3);
+        expect(mockRegistry.set).toHaveBeenCalledWith('health', 7);
+    });
+
+    it('should cap player health at 0', () => {
+        mockRegistry.get.mockReturnValue(2);
+        gameRegistry.damagePlayer(5);
+        expect(mockRegistry.set).toHaveBeenCalledWith('health', 0);
+    });
+
+    it('should toggle sound correctly', () => {
+        mockRegistry.get.mockReturnValue(true);
+        gameRegistry.toggleSound();
+        expect(mockRegistry.set).toHaveBeenCalledWith('playSound', false);
     });
 
     it('should reset all values correctly', () => {

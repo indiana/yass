@@ -42,9 +42,9 @@ The project has successfully migrated from a legacy Phaser 2 architecture to a m
 1.  [x] Extract a `CollisionManager` to reduce the size and complexity of `Play.ts`.
 2.  [x] Create `configs/GameConstants.ts` to remove hardcoded values from classes.
 
-### Phase 3: Medium-term (Technical Excellence)
-1.  Audit and remove all `any` types to ensure full TypeScript coverage.
-2.  Standardize `GameRegistry` for all game state interactions.
+### Phase 3: Medium-term (Technical Excellence) [DONE]
+1.  [x] Audit and remove all `any` types to ensure full TypeScript coverage.
+2.  [x] Standardize `GameRegistry` for all game state interactions.
 
 ### Phase 4: Long-term (Feature Scaling)
 1.  Implement a `WaveManager` to allow for more complex difficulty scaling and level progression.

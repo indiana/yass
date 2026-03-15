@@ -38,9 +38,9 @@ export class CollisionManager {
   ) {
     const player = obj1 as Player;
     const bullet = obj2 as Bullet;
-    this.context.registry.health -=
-      (bullet.getData("damage") as number) ||
-      GameConstants.PLAYER.DAMAGE_ON_HIT;
+    const damage = (bullet.getData("damage") as number) || GameConstants.PLAYER.DAMAGE_ON_HIT;
+    
+    this.context.registry.damagePlayer(damage);
     bullet.disableBody(true, true);
 
     if (this.context.registry.health <= 0) {
@@ -80,7 +80,7 @@ export class CollisionManager {
   private enemyDown(enemy: Enemy) {
     enemy.disableBody(true, true);
     this.explode(enemy.x, enemy.y);
-    this.context.registry.score += enemy.config.score;
+    this.context.registry.addScore(enemy.config.score);
     this.context.powerupSpawner.trySpawnPowerup(
       enemy.x,
       enemy.y,
